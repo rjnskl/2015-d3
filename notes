@@ -1,0 +1,21 @@
+notes
+
+select = returns first one
+select all = returns all selections
+
+
+d3.select("h1");
+[Array[1]0: h1length: 1parentNode: html__proto__: Array[0]]
+d3.select("h1").text("Monkeys")
+[Array[1]]
+d3.select("h1").attr("class","hed")
+[Array[1]]
+d3.select("h1").style("color", "red")
+[Array[1]]
+
+If you want to see if data join worked - click on the element in inspect element, then go into console and enter: $0.__data__
+
+
+.enter() is also doing update and exit behind the scenes
+
+.data() always comes before .enter()
