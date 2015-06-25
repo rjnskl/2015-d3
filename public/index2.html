@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style type="text/css">
+body {
+    font-family: "Akkurat", "Arial", sans-serif;
+}
+
+svg {
+    border: 1px solid #ccc;
+}
+
+circle {
+    fill: #2b00f7;
+}
+
+.axis text {
+    font-size: 12px;
+    fill: #777;
+}
+
+.axis path {
+    display: none;
+}
+
+.axis line {
+    stroke-width: 1px;
+    stroke: #ccc;
+    stroke-dasharray: 1px 2px;
+    z-index: 0;
+}
+
+.circle-text {
+    color: #ddd;
+    font-size: 14px;
+}
+</style>
+
+<body>
+    <h1>anscombe's quartet</h1>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
+<script>
+var anscombeData = [{
+    "x": 8,
+    "y": 5.25
+}, {
+    "x": 8,
+    "y": 5.56
+}, {
+    "x": 8,
+    "y": 5.76
+}, {
+    "x": 8,
+    "y": 6.58
+}, {
+    "x": 8,
+    "y": 6.89
+}, {
+    "x": 8,
+    "y": 7.04
+}, {
+    "x": 8,
+    "y": 7.71
+}, {
+    "x": 19,
+    "y": 7.91
+}, {
+    "x": 8,
+    "y": 8.47
+}, {
+    "x": 8,
+    "y": 8.84
+}, {
+    "x": 8,
+    "y": 12.5
+}]
+
+// var body = d3.select("body");
+// var svg = body.append("svg");
+
+// same as...var svg = d3.select("body").append("svg")
+
+var margin = {
+    top: 20,
+    right: 40,
+    bottom: 30,
+    left: 10
+};
+
+var width = 720 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+
+// range is your pixel space, and takes in min and max
+// domain is your data 
+
+var xScale = d3.scale.linear()
+    .range([0, width])
+    .domain([7, 20]);
+
+var yScale = d3.scale.linear()
+    .range([height, 0])
+    .domain([5, 15]);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var xAxis = d3.svg.axis()
+    .scale(xScale)
+    .orient("bottom")
+    .tickSize(-height)
+    .tickPadding(8)
+
+var yAxis = d3.svg.axis()
+    .scale(yScale)
+    .orient("right")
+    .tickSize(-width)
+    .tickPadding(8)
+
+//svg default is pixels
+
+var circleGroup = svg.selectAll("g")
+    .data(anscombeData)
+    .enter()
+    .append("g")
+    .attr("class", "circle-group")
+    .attr("transform", function(d) {
+        return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")"
+    });
+// .attr("r",5) also works but not great for humans to read
+
+svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + (height) + ")")
+    .call(xAxis);
+
+svg.append("g")
+    .attr("class", "y axis")
+    .attr("transform", "translate(" + (width) + ",0)")
+    .call(yAxis);
+
+circleGroup.append("circle")
+    .attr("r", 5);
+
+circleGroup.append("text")
+    .attr("class", "circle-text")
+    .attr("dx", 6)
+    .text(function(d) {
+        return d.x + " , " + d.y
+    });
+
+// .attr("transform", "translate(1,100)");
+
+//old code
+
+// var circle = svg.selectAll("circle")
+// 		.data(anscombeData)
+// 		.enter()
+// 		.append("circle")
+// 		.attr("r", 5)
+// 		.attr("cx", function(xpos) { return xScale(xpos.x) })
+// 		.attr("cy", function(ypos) { return yScale(ypos.y) })
+// .attr("cx", function(xpos) { console.log(xpos.x); return xpos.x })
+// .attr("cy", function(ypos) { console.log(ypos.y); return ypos.y });
+
+// var label = svg.selectAll("text")
+// 		.data(anscombeData)
+// 		.enter()
+// 		.append("text")
+// 		.attr("x", function(xpos) { return xScale(xpos.x) })
+// 		.attr("y", function(ypos) { return yScale(ypos.y) })
+// 		.text(function(d) {return d.x + "," + d.y});
+</script>
