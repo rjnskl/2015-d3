@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<style type="text/css">
+
+  body {
+    font-family: arial, sans;
+    font-size: 11px;
+    width: 720px;
+    margin: 30px auto;
+  }
+  
+  svg {
+    border: 1px solid #f0f;
+  }
+
+  .axis line,
+  .axis path {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+  }
+
+</style>
+
+<body>
+<div class="g-chart"></div>
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
+
+<script type="text/javascript">
+  
+var margin = {top: 20, right: 50, bottom: 20, left: 10};
+
+var width = 720 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+
+var svg = d3.select(".g-chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var yScale = d3.scale.linear()
+    .range([height, 0 ]);
+
+var xScale = d3.scale.ordinal()
+    .rangeBands([0 , width ], 0.15);
+
+d3.tsv("jobs.tsv", ready);
+
+function ready(error, jobsData) {
+  if (error) return console.warn(error);
+
+  jobsData.forEach(function(d) {
+    d.jobs_change = +d.jobs_change;
+  });
+
+  var ext = d3.extent(jobsData, function(d) { return d.jobs_change; });
+
+  yScale
+    .domain(ext);
+
+  xScale
+    .domain(jobsData.map(function(d) { return d.month_year; }));
+
+  var rect = svg.selectAll("rect")
+    .data(jobsData)
+    .enter().append("rect")
+    .attr("class", "jobs-rect")
+    .attr("x", function(d) { return xScale(d.month_year); })
+    .attr("y", function(d) {
+      //what's bigger, zero or jobs change?
+      var m = Math.max(0, d.jobs_change);
+      return yScale(m);
+    })
+    .attr("width", xScale.rangeBand() )
+    .attr("height", function(d) {
+      return Math.abs(yScale(d.jobs_change) - yScale(0));
+    })
+    .style("fill", function(d) { return d.jobs_change < 0 ? "red" : "#ccc"; });
+
+    svg.append("line")
+      .attr('x1', 0)
+      .attr("x2", width)
+      .attr("y1", yScale(0))
+      .attr("y2", yScale(0))
+      .style("stroke", "#000")
+
+
+}
+
+
+
+</script>

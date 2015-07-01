@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style type="text/css">
+svg {
+    border: 1px solid #eee;
+}
+
+h1 {
+    font: 24px "Akkurat", sans-serif;
+}
+.bar {
+	fill: blue;
+}
+.xaxis,
+.yaxis {
+    font: 12px "Akkurat", sans-serif;
+}
+
+.xaxis line,
+.xaxis path,
+.yaxis line,
+.yaxis path {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+</style>
+
+<body>
+    <h1>Change in nonfarm jobs</h1>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8">
+</script>
+<script>
+d3.tsv("jobs.tsv", ready);
+
+var margin = {
+        top: 40,
+        right: 40,
+        bottom: 70,
+        left: 50
+    },
+    padding = {
+        top: 60,
+        right: 60,
+        bottom: 60,
+        left: 60
+    },
+    outerWidth = 960,
+    outerHeight = 500,
+    innerWidth = outerWidth - margin.left - margin.right,
+    innerHeight = outerHeight - margin.top - margin.bottom,
+    width = innerWidth - padding.left - padding.right,
+    height = innerHeight - padding.top - padding.bottom;
+
+var width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+// appends svg, but then appends all the data stuff into a g thats translated to account for extra margin
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    // .call(axis);
+
+// again, range is pixels, domain is the data
+
+var yScale = d3.scale.linear()
+    .range([height, 0]);
+
+var xScale = d3.scale.ordinal()
+    .rangeRoundBands([0, width], 0.1);
+
+var xAxis = d3.svg.axis()
+    .scale(xScale)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(yScale)
+    .orient("left");
+
+var g = svg.append("g")
+    .attr("transform", "translate(" + padding.left + "," + padding.top + ")");
+var linefill = textures.lines()
+    .thicker();
+
+function ready(error, data) {
+    if (error) throw "error loading data";
+
+    data.forEach(function(d) {
+        d.jobs_change = +d.jobs_change;
+    });
+
+    var jobs = data.map(function(d) {
+        return d.jobs_change
+    });
+
+    var months = data.map(function(d) {
+        return d.month_year
+    });
+
+
+    // var s = d.month_year.split("-");
+    // d.date = new Date(s[0], (+s[1]-1));
+
+
+    window.data = data;
+
+    var jobsMin = d3.min(jobs);
+    var jobsMax = d3.max(jobs);
+
+    yScale.domain([jobsMin, jobsMax]);
+    xScale.domain(months)
+        .range();
+
+    svg.append("g")
+        .attr("class", "xaxis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("class", "yaxis")
+        .call(yAxis)
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Jobs");
+
+    svg.selectAll(".xaxis text")
+        .attr("transform", function(d) {
+            return "translate(" + this.getBBox().height * -1 + "," + 30 + ")rotate(-90)";
+        });
+
+    xAxis.tickValues([months]);
+    yAxis.tickValues([jobs]);
+
+    svg.selectAll(".bar")
+        .data(data)
+        .enter().append("rect")
+        .attr("class", "bar")
+        .attr("x", function(d) {
+            return xScale(d.month_year);
+        })
+        .attr("width", xScale.rangeBand())
+        .attr("y", function(d) {
+            return yScale(Math.max(d.jobs_change, 0))
+        })
+        .attr("height", function(d) {
+            return Math.abs(yScale(d.jobs_change) - yScale(0));
+        })
+        .attr("fill", linefill);
+
+
+};
+
+
+
+// d3.min(array[, accessor])
+</script>
