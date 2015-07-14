@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<style type="text/css">
+
+  body {
+    font-family: arial, sans;
+    font-size: 11px;
+    margin: 10px auto;
+    /*width:1220px;*/
+  }
+  
+  svg {
+    border: 1px solid #f0f;
+  }
+
+  .axis text {
+    font-size: 12px;
+    fill: #777;
+  }
+
+  .axis path {
+    display: none;
+  }
+
+  .axis line {
+    stroke-width:.3px;
+    stroke: #dedede;
+    /*stroke-dasharray: 2px 2px;*/
+  }
+
+  .country-container {
+    display: inline-block;
+    margin-right:10px;
+  }
+
+  .country-line {
+    stroke: steelblue;
+    stroke-width: 2px;
+    fill: none;
+  }
+
+  .secondary-line.country-line {
+    stroke: #d0d0d0;
+  }
+
+
+</style>
+
+<body>
+
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
+
+<script type="text/javascript">
+  
+var margin = {top: 20, right: 50, bottom: 20, left: 10};
+
+var width = 320 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+
+var xScale = d3.scale.linear()
+    .range([0,width]);
+
+var yScale = d3.scale.linear()
+    .range([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(xScale)
+    .tickSize(-height)
+    .tickPadding(8)
+    .tickFormat(d3.round)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(yScale)
+    .tickSize(-width)
+    .tickPadding(8)
+    .orient("right");
+
+
+d3.tsv("all-countries.tsv", ready);
+
+function ready(error, data) {
+  if (error) return console.warn(error);
+
+  //here will go formatting.
+  data.forEach(function(d) {
+
+    // d.cop50 = +d.cop50.replace(",", "");
+    // d.cop5 = +d.cop50.replace(",", "");
+    // d.cop50 = +d.cop50.replace(",", "");
+
+    var keyReg = /cop[\d]+/;
+        Object.keys(d).forEach(function(key, index) {
+          if (keyReg.test(key)) {
+            d[key] = +d[key].replace(",", "");
+          }
+        });
+
+    d.year = +d.dataset.split(" ")[d.dataset.split(" ").length - 1];
+    d.country = d.dataset.replace(/\d/g,'').split(" - ")[1].trim();    
+
+    console.log(d);
+
+  });
+
+  console.log(data);
+
+  xScale.domain(d3.extent(data, function(d) { return d.year; }));
+  yScale.domain([0,100000]);
+
+  function makeComparisonChart(countryName, cop) {
+
+    //do all the stuff
+
+    var line = d3.svg.line()
+        .x(function(d) { return xScale(d.year); })
+        .y(function(d) { return yScale(d[cop]); });
+
+    var monkeys = d3.select("body")
+        .append("div")
+        .attr("class", "country-container");
+
+    monkeys.append("h2")
+        .text(countryName + ", cutoff point " + cop);
+
+    var svg = monkeys.append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + (height) + ")")
+        .call(xAxis)
+        .selectAll("g");
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .attr("transform", "translate(" + (width) + ",0)")
+        .call(yAxis);
+
+    var usa = data.filter(function(d) { return d.country === "United States"; });
+
+    svg.append("path")
+        .attr("class", "country-line usa-line")
+        .datum(usa)
+        .attr("d", line);
+
+    svg.append("path")
+        .attr("class", "country-line secondary-line")
+        .datum(data.filter(function(d) { return d.country === countryName; }))
+        .attr("d", line);
+
+  }
+  
+   uniqueCountries = d3.set(data.map(function(d) { return d.country; })).values();
+
+  uniqueCountries.forEach(function(d) {
+
+    var fields = ["cop5", "cop50", "cop95"];
+        fields.forEach(function(j) {
+          makeComparisonChart(d,j);          
+        });
+  });
+
+}
+
+
+
+
+
+</script>

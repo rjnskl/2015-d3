@@ -59,7 +59,7 @@ h3 {
 </style>
 
 <body>
-    <h1>Change in nonfarm payroll</h1>
+    <h1>Change in nonfarm payroll (Private sector)</h1>
     <h3>Most Recent: <span class="current-value"></span></h3>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8">
@@ -129,6 +129,7 @@ function ready(error, data) {
     // the + is vanilla js that changes the string into numbers
     data.forEach(function(d) {
         d.jobs_change = +d.jobs_change;
+        d.private_job_change = +d.private_job_change;
         d.animal = "cow";
 
         var s = d.month_year.split("-");
@@ -136,7 +137,7 @@ function ready(error, data) {
     });
 
     yScale.domain(d3.extent(data, function(d) {
-        return d.jobs_change;
+        return d.private_job_change;
     }));
     data.sort(function(a, b) {
         return a.date - b.date;
@@ -198,15 +199,15 @@ function ready(error, data) {
         .attr("width", xScale.rangeBand())
         .attr("y", function(d) {
             // find out whats bigger, 0 or jobs change
-            return yScale(Math.max(d.jobs_change, 0))
+            return yScale(Math.max(d.private_job_change, 0))
         })
         .attr("height", function(d) {
             // draws the height from the origin point to zero
-            return Math.abs(yScale(d.jobs_change) - yScale(0));
+            return Math.abs(yScale(d.private_job_change) - yScale(0));
         });
 
     var last = data[data.length-1];
-    d3.select(".current-value").text("+" + last.jobs_change + "k");
+    d3.select(".current-value").text("+" + last.private_job_change + "k");
 
 };
 

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<meta charset='utf-8'>
+
+<style>
+body{
+	margin: 0px;
+	font: 10px sans-serif;
+}
+
+path.player{
+	stroke: steelblue;
+	stroke-width: 1px;
+	fill: none;
+}
+
+path.segement{
+	stroke: red;
+	stroke-width: 4px;
+	fill: none;
+}
+
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+circle{
+	stroke-width: 2px;
+	stroke: steelblue;
+}
+
+.name{
+	text-shadow: 0 2px 0 #fff, 2px 0 0 #fff, 0 -2px 0 #fff, -2px 0 0 #fff;
+	fill: black;
+}
+
+
+</style>
+
+<body></body>
+
+<script src='js/d3.js'></script>
+<script src='js/lodash-3.8.0.js'></script>
+<script src='js/d3-jetpack.js'></script>
+<script src='js/d3-starterkit.js'></script>
+
+
+<script>
+var playerSegements = [
+	{name: 'New Jersey State', 	start: 1970,	stop: 1990,		status: '1'},
+	{name: 'New Jersey State', 	start: 1990,	stop: 2000,		status: '2'},
+	{name: 'Torrance, CA', 		start: 1985,	stop: 2003,		status: '1'},
+
+	{name: 'Adelanto, CA', 		start: 1957,	stop: 1969,		status: 'C'},
+
+	{name: 'Steubenville, OH', 	start: 1959,	stop: 1969,		status: 'C'},
+	{name: 'Pittsburgh, PA', 				start: 1970,	stop: 1979,		status: 'C'},
+]
+
+var players = d3.nest()
+		.key(function(d){ return d.name })
+		.entries(playerSegements)
+
+players.forEach(function(player){
+	player.start = player.values[0].start
+	player.stop  = _.last(player.values).stop
+
+	player.values.forEach(function(segement){
+		segement.player = player
+	})
+})
+
+
+
+var color = d3.scale.category10()
+
+
+
+players = _.sortBy(players, 'start')
+players.forEach(function(d){ d.dates = [] })
+
+// draw the bumps 
+
+d3.range(1950, 2016).forEach(function(date){
+	var currentHeight = 0
+	players.forEach(function(d){
+		if (d.start <= date && date <= d.stop){
+			d.dates.push({date: date, height: ++currentHeight})
+			if (d.stop  == date) d.stopHeight  = currentHeight
+			if (d.start == date) d.startHeight = currentHeight
+
+		}
+	})
+})
+
+// drawn the bumps
+
+var c = d3.conventions({height: 120})
+
+c.x.domain([1950, 2015])
+c.y.domain([0, 10])
+
+c.yAxis.ticks(2)
+
+c.drawAxis()
+
+// var niceDate = d3.time.format(specifier)
+
+// var niceDate = format.parse(date)
+
+var line = d3.svg.line()
+		.x(ƒ('date', c.x))
+		.y(ƒ('height', c.y))
+
+c.svg.dataAppend(players, 'path.player')
+		.attr('d', ƒ('dates', line))
+
+
+var segLine = d3.svg.line()
+		.x(ƒ('date', c.x))
+		.y(ƒ('height', c.y))
+
+
+c.svg.dataAppend(playerSegements, 'path.segement')
+		.attr('d', function(d){
+			var dates = d.player.dates.filter(function(date){
+				return d.start <= date.date && date.date <= d.stop
+			})
+
+			return line(dates)
+		})
+		.style('stroke', function(d){ return color(d.status) })
+
+
+// c.svg.dataAppend(players, 'circle.start')
+// 		.attr({cx: ƒ('stop', c.x), cy: ƒ('stopHeight', c.y)})
+// 		.attr({r: 3, fill: 'white'})
+
+// c.svg.dataAppend(players, 'circle.stop')
+// 		.attr({cx: ƒ('start', c.x), cy: ƒ('startHeight', c.y)})
+// 		.attr({r: 3, fill: 'steelblue'})
+
+c.svg.dataAppend(players, 'text.name')
+		.attr({x: ƒ('start', c.x), y: ƒ('startHeight', c.y)})
+		.text(function(d){ return d.key })
+		// .text(ƒ('name'))
+		.attr({'text-anchor': 'end', 'dy': '.33em', 'dx': '-.5em'})
+
+
+d3.select(self.frameElement).style('height', d3.select('svg').attr('height') + 'px');
+
+</script>

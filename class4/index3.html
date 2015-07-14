@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style type="text/css">
+svg {
+    border: 1px solid #eee;
+}
+
+.xaxis,
+.yaxis {
+    font: 12px "Akkurat", sans-serif;
+}
+
+.xaxis line,
+.xaxis path {
+    stroke: #000;
+    stroke-width: 1px;
+    fill: none;
+    shape-rendering: crispEdges;
+}
+
+.yaxis line,
+.yaxis path {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.line {
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 3px;
+    shape-rendering: crispEdges;
+}
+
+.line.canada {
+    stroke: #eee;
+}
+</style>
+
+<body>
+    <h1>Class 4:</h1>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8">
+</script>
+<script>
+var margin = {
+        top: 50,
+        right: 50,
+        bottom: 70,
+        left: 50
+    },
+    padding = {
+        top: 60,
+        right: 60,
+        bottom: 60,
+        left: 60
+    },
+    outerWidth = 960,
+    outerHeight = 500,
+    innerWidth = outerWidth - margin.left - margin.right,
+    innerHeight = outerHeight - margin.top - margin.bottom,
+    width = innerWidth - padding.left - padding.right,
+    height = innerHeight - padding.top - padding.bottom;
+
+var width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+
+
+var xScale = d3.scale.linear()
+    .range([0, width]);
+
+var yScale = d3.scale.linear()
+    .range([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(xScale)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(yScale)
+    .orient("right");
+
+var line = d3.svg.line()
+    .x(function(d) {
+        return xScale(d.year);
+    })
+    .y(function(d) {
+        return yScale(d.cop50);
+    });
+
+
+
+
+d3.tsv("alldata.tsv", ready);
+// how does this function know to pass in the tsv?
+function ready(error, data) {
+
+    if (error) return console.warn(error);
+    data.forEach(function(d) {
+
+        d.cop50 = +d.cop50.replace(",", "");
+        d.year = +d.dataset.split(" ")[d.dataset.split(" ").length - 1];
+        d.country = d.dataset.replace(/\d/g, '').split(" - ")[1].trim();
+    });
+
+    function makeComparisonChart(countryName) {
+
+        var container = d3.select("body");
+
+        container.append("h2")
+            .text(countryName);
+
+        var svg = d3.select("body").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        d.cop50 = +d.cop50.replace(",", "");
+
+        d.year = +d.dataset.replace(/\D/g, '');
+
+        d.country = d.dataset.replace(/\d/g, '').split(" - ")[1].trim();
+
+        svg.append("g")
+            .attr("class", "xaxis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis);
+
+        svg.append("g")
+            .attr("class", "yaxis")
+            .attr("transform", "translate(" + width + ",0)")
+            .call(yAxis);
+
+        var usa = data.filter(function(d) {
+            return d.country === "United States";
+        });
+
+        var canada = data.filter(function(d) {
+            return d.country === "Canada";
+        });
+
+        svg.append("path")
+            .datum(usa)
+            .attr("class", "line usa")
+            .attr("d", line)
+            .style("stroke", "blue");
+
+        svg.append("path")
+            .datum(canada)
+            .attr("class", "line canada")
+            .attr("d", line);
+
+    }
+
+    makeComparisonChart();
+
+}
+</script>

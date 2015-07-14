@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style type="text/css">
+svg {
+    border: 1px solid #eee;
+}
+.xaxis,
+.yaxis {
+    font: 12px "Akkurat", sans-serif;
+}
+.xaxis line,
+.xaxis path {
+    stroke: #000;
+    stroke-width: 1px;
+    fill: none;
+    shape-rendering: crispEdges;
+}
+
+
+.yaxis line,
+.yaxis path {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+.line {
+	fill:none;
+	stroke: blue;
+	stroke-width: 3px;
+	shape-rendering: crispEdges;
+}
+</style>
+
+<body>
+    <h1>Class 4:</h1>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8">
+</script>
+<script>
+var margin = {
+        top: 50,
+        right: 50,
+        bottom: 70,
+        left: 50
+    },
+    padding = {
+        top: 60,
+        right: 60,
+        bottom: 60,
+        left: 60
+    },
+    outerWidth = 960,
+    outerHeight = 500,
+    innerWidth = outerWidth - margin.left - margin.right,
+    innerHeight = outerHeight - margin.top - margin.bottom,
+    width = innerWidth - padding.left - padding.right,
+    height = innerHeight - padding.top - padding.bottom;
+
+var width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+// appends svg, but then appends all the data stuff into a g thats translated to account for extra margin
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var xScale = d3.scale.linear()
+    .range([0, width]);
+
+var yScale = d3.scale.linear()
+    .range([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(xScale)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(yScale)
+    .orient("right");
+
+var line = d3.svg.line()
+    .x(function(d) { return xScale(d.year); })
+    .y(function(d) { return yScale(d.cop50); });
+
+
+
+
+
+
+
+d3.tsv("usdata.tsv", ready);
+// how does this function know to pass in the tsv?
+function ready(error, data) {
+    if (error) return console.warn(error);
+
+    data.forEach(function(d) {
+
+
+    		window.data = data;
+
+
+        d.cop50 = +d.cop50.replace(",", "");
+
+        // get years
+        // d.year = +d.dataset.replace(/\D/g,'');
+        d.year = +d.dataset.split(" ")[d.dataset.split(" ").length - 1];
+
+        //remove all numbers
+        d.country = d.dataset.replace(/\d/g, '').split(" - ")[1].trim();
+
+        // other options
+        //   year: d.dataset.substr(d.dataset.length - 4),
+        // country: d.dataset.substring(6,d.dataset.length-5),
+        // var myRe = /([\w]|[\s]|)*-\s([^\d]*)([\d]*)/g;
+        //     var dataSetArray = myRe.exec(point.dataset);
+        //     point.year = +dataSetArray[3];
+        //     point.country = dataSetArray[2].trim();
+
+    });
+
+    console.log("data loaded", data);
+
+	xScale.domain(d3.extent(data, function(d) { return d.year; }));
+    yScale.domain(d3.extent(data, function(d) { return d.cop50; }));
+
+    svg.append("g")
+        .attr("class", "xaxis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("class", "yaxis")
+        .attr("transform", "translate(" + width + ",0)")
+        .call(yAxis);
+
+    svg.append("path")
+      .datum(data)
+      .attr("class", "line")
+      .attr("d", line);
+
+    svg.append("g").attr("class", "circle-container").selectAll("circle")
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("r", 2)
+        .attr("cx", function(d) { return xScale(d.year) })
+        .attr("cy", function(d) { return yScale(d.cop50)});
+}
+</script>
